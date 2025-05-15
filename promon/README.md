@@ -24,7 +24,7 @@ This version is implemented entirely in Bash shell scripts and uses native Linux
 
 1. Clone the repository:
    ```
-   git clone https://github.com/yourusername/promon.git
+https://github.com/Ishaan-Rai09/PMS.git
    cd promon
    ```
 
