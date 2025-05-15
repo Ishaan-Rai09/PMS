@@ -1,0 +1,139 @@
+#!/bin/bash
+#
+# ProMon - A Lightweight Linux Process Management & Monitoring Tool
+# Bash script version
+#
+
+# Constants
+LOG_DIR="$(dirname "$0")/logs"
+LOG_FILE="$LOG_DIR/promon.log"
+
+# Make sure log directory exists
+mkdir -p "$LOG_DIR"
+
+# Include utility scripts
+source "$(dirname "$0")/utils/process_viewer.sh"
+source "$(dirname "$0")/utils/safe_killer.sh"
+source "$(dirname "$0")/utils/system_monitor.sh"
+source "$(dirname "$0")/utils/logger.sh"
+
+# Log function
+log_action() {
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] ACTION: $1" >> "$LOG_FILE"
+}
+
+# Display about information
+show_about() {
+    cat << EOF
+
+===== About ProMon =====
+
+ProMon is a lightweight Linux Process Management & Monitoring Tool
+that allows users to view, monitor, and manage system processes
+safely and effectively.
+
+Features:
+- View all running processes
+- Identify safe processes to terminate
+- Kill processes by PID
+- Monitor system resource usage
+- Log all actions for reference
+
+WARNING: Be careful when terminating processes.
+Killing system processes can lead to system instability.
+
+Created as a learning project for Linux system administration.
+
+Version: 1.0 (Bash version)
+EOF
+}
+
+# Display menu
+display_menu() {
+    echo
+    echo "=================================================="
+    echo "  ProMon - Linux Process Management Tool"
+    echo "=================================================="
+    echo "1. View Processes"
+    echo "2. Show Safe Processes to Kill"
+    echo "3. Kill Process by PID"
+    echo "4. View System Usage"
+    echo "5. View Logs"
+    echo "6. About"
+    echo "0. Exit"
+    echo "=================================================="
+    echo -n "Enter your choice: "
+    read choice
+    echo
+    
+    return 0
+}
+
+# Check for command line arguments
+if [[ "$1" == "--about" ]]; then
+    show_about
+    exit 0
+fi
+
+# Main loop
+while true; do
+    display_menu
+    
+    case $choice in
+        1)
+            log_action "View Processes"
+            view_processes
+            ;;
+        2)
+            log_action "Show Safe Processes to Kill"
+            show_safe_processes
+            ;;
+        3)
+            log_action "Kill Process by PID - Attempt"
+            echo -n "Enter PID to kill: "
+            read pid
+            
+            if [[ ! "$pid" =~ ^[0-9]+$ ]]; then
+                echo "Error: Please enter a valid PID (integer)."
+                log_action "Kill Process - FAILED (Invalid PID)"
+            else
+                echo -n "Are you sure you want to kill process with PID $pid? (y/n): "
+                read confirm
+                
+                if [[ "$confirm" == "y" || "$confirm" == "Y" ]]; then
+                    if kill_process $pid; then
+                        log_action "Kill Process PID $pid - SUCCESS"
+                    else
+                        log_action "Kill Process PID $pid - FAILED"
+                    fi
+                else
+                    echo "Operation cancelled."
+                    log_action "Kill Process PID $pid - CANCELLED"
+                fi
+            fi
+            ;;
+        4)
+            log_action "View System Usage"
+            show_system_usage
+            ;;
+        5)
+            log_action "View Logs"
+            show_logs
+            ;;
+        6)
+            log_action "View About"
+            show_about
+            ;;
+        0)
+            log_action "Exit Application"
+            echo "Thank you for using ProMon!"
+            exit 0
+            ;;
+        *)
+            echo "Invalid choice. Please try again."
+            ;;
+    esac
+    
+    echo
+    read -p "Press Enter to continue..."
+done 
